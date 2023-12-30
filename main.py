@@ -50,18 +50,7 @@ def start_mess(message):
         connect.commit()
         cursor.close()
         connect.close()
-    bot.send_message(message.from_user.id, f"Botdan foydalanish uchun kanalga a'zo bo'ling", reply_markup=main_menu())
-    bot.register_next_step_handler(channel)
-@bot.callback_query_handler(func=lambda call: True)
-def channel(call, message):
-    member = bot.get_chat_member(chat_id=channel_username, user_id=message.from_user.id)
-    if member.status == "left":
-        bot.send_message(message.from_user.id, f"Assalamu aleykum {message.from_user.first_name}", reply_markup=markup_1)
-    elif call.data == "test":
-        if member.status == "left":
-            bot.send_message(message.from_user.id, f"Assalamu aleykum {message.from_user.first_name}", reply_markup=markup_1)
-        else:
-            bot.send_message(message.from_user.id, f"Iltimos avval kanalga a'zo bo'ling", reply_markup=main_menu())
+    bot.send_message(message.from_user.id, f"Botdan foydalanish uchun kanalga a'zo bo'ling {channel_username}", reply_markup=markup_1)
 
 @bot.message_handler(content_types=['text'])
 def mess_hand(message):
@@ -74,18 +63,17 @@ def mess_hand(message):
         bot.send_message(message.from_user.id, f"Do'stlaringizga yuboring va bepul signallar oling😉",
                          reply_markup=get_share_key(message.from_user.id))
     elif message.text == "Taklif qilingan do'stlar 📈":
-        # Call the function to get referrals count and send it to the user
         referrals_count = get_referrals_count(message.from_user.id)
         bot.send_message(message.from_user.id, f"Sizning taklif qilingan do'stlaringiz soni: {referrals_count}")
     elif message.text == "Bepul skalping signallar":
-        referrals_count = get_referrals_count(message.from_user.id)
-        if referrals_count >= 10:
-            bot.send_message(message.from_user.id, f"Siz {referrals_count} ta odam taklif qildingiz endi esa signalni kuting")
-            bot.register_next_step_handler(message, handle_new_channel_post)
-        else:
-            bot.send_message(message.from_user.id, f"siz 10 tadan kam odam qo'shgansiz, szda hozir {referrals_count} do'st taklif qilingan \
-             https://t.me/{BOT_NAME}?start={message.from_user.id}",
-                             reply_markup=get_share_key(message.from_user.id))
+    #     referrals_count = get_referrals_count(message.from_user.id)
+    #     if referrals_count >= 10:
+        bot.send_message(message.from_user.id, f"Signalni kuting")
+    #         bot.register_next_step_handler(message, handle_new_channel_post)
+    #     else:
+    #         bot.send_message(message.from_user.id, f"siz 10 tadan kam odam qo'shgansiz, szda hozir {referrals_count} do'st taklif qilingan \
+    #          https://t.me/{BOT_NAME}?start={message.from_user.id}",
+    #                          reply_markup=get_share_key(message.from_user.id))
     elif message.text == "VIPKANAL  Haqida 💎":
         bot.send_message(message.from_user.id, "Welcome to the VIP Channel!\n\n" +
                           "Bizning VIP kanalda halol coinlarda ishlaymiz.. Insha Allah|\n\n" +
@@ -113,9 +101,6 @@ def mess_hand(message):
 
 @bot.channel_post_handler(chat_id=[-1002032308872], content_types=['text', 'photo', 'video'])
 def handle_new_channel_post(message):
-    title = message.chat.title
-    text = message.text
-
 
     connect = sq.connect(db_name)
     cursor = connect.cursor()
@@ -123,9 +108,7 @@ def handle_new_channel_post(message):
     user_ids = [row[0] for row in cursor.fetchall()]
 
     for user_id in user_ids:
-        referrals_count = get_referrals_count(user_id)
-        if referrals_count >= 10:
-            bot.copy_message(chat_id=user_id, from_chat_id="@signalchanelltest100", message_id=message.message_id)
+        bot.copy_message(chat_id=user_id, from_chat_id="@signalchanelltest100", message_id=message.message_id)
 
 bot.add_custom_filter(custom_filters.ChatFilter())
 
