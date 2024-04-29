@@ -9,7 +9,7 @@ from psycopg2.extras import RealDictCursor
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_name = 'Trader_bot'
-DATABASE_URL = f'postgresql://postgres:20046676@localhost/{db_name}'
+DATABASE_URL = f'postgresql://postgres:password@localhost/{db_name}'
 bot = telebot.TeleBot(TOKEN)
 
 def get_db_connection():
