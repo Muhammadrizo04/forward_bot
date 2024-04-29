@@ -1,3 +1,3 @@
-TOKEN = '6688848972:AAEMFzQEsXFg5uya1m8vcwVQ_KpijmFIzR0'
-BOT_NAME = "Atomic_trader_bot"
+TOKEN = 'BOT_TOKEN'
+BOT_NAME = "BOT_NAME"
 DEBUG = 1
