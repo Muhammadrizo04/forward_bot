@@ -9,7 +9,7 @@ markup_1.add(types.KeyboardButton(text='Asosiy kanalimiz 💬'),types.KeyboardBu
 
 def main_channel():
     channel_link = types.InlineKeyboardMarkup()
-    channel_link.add(types.InlineKeyboardButton(text="ATOMIC CRYPTO UZ", url='https://t.me/atomic_cryptouz'))
+    channel_link.add(types.InlineKeyboardButton(text="ATOMIC CRYPTO", url='https://t.me/atomic_cryptouz'))
     return channel_link
 
 
