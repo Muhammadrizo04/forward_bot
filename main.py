@@ -4,41 +4,34 @@ from markup import *
 import os
 import sqlite3 as sq
 from telebot import custom_filters
-import psycopg2
-from psycopg2.extras import RealDictCursor
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_name = 'Trader_bot'
-DATABASE_URL = f'postgresql://postgres:password@localhost/{db_name}'
+db_name = os.path.join(BASE_DIR, 'main.db')
 bot = telebot.TeleBot(TOKEN)
-
-def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    return conn
 
 
 @bot.message_handler(commands=['start'])
 def start_mess(message):
-    user_id = message.from_user.id
-    text = message.text
-    referer_id = int(text.split(' ')[1]) if len(text.split()) > 1 else 0
+    if len(message.text) > 6:
+        referer_id = int(message.text.split(' ')[1])
+    else:
+        referer_id = 0
+    connect = sq.connect(db_name)
+    cursor = connect.cursor()
+    cursor.execute('SELECT * FROM users WHERE chat_id=? ;', [message.from_user.id])
+    info = cursor.fetchall()
+    if not info:
+        cursor.execute('INSERT INTO users(name,chat_id,referals) VALUES(?,?,?);',
+                       [message.from_user.first_name, message.from_user.id, referer_id])
+        referer_info = cursor.fetchall()
+        if referer_info:
+            cursor.execute('UPDATE users SET `referals` = ? WHERE chat_id = ?;', [referer_info[0][0] + 1, referer_id])
+        connect.commit()
+        cursor.close()
+        connect.close()
+    bot.send_message(message.from_user.id, f"Botdan foydalanish uchun kanalga a'zo bo'ling {channel_link}", reply_markup=markup_1)
 
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('SELECT * FROM users WHERE chat_id = %s;', (user_id,))
-            info = cursor.fetchone()
-            if not info:
-                cursor.execute('INSERT INTO users(name, chat_id, referals) VALUES (%s, %s, 0);',
-                               (message.from_user.first_name, user_id))
-                if referer_id:
-                    cursor.execute('SELECT referals FROM users WHERE chat_id = %s;', (referer_id,))
-                    referer_info = cursor.fetchone()
-                    if referer_info:
-                        new_referals = referer_info['referals'] + 1
-                        cursor.execute('UPDATE users SET referals = %s WHERE chat_id = %s;',
-                                       (new_referals, referer_id))
-                conn.commit()
-    bot.send_message(user_id, f"Botdan foydalanish uchun kanalga a'zo bo'ling @atomic_cryptouz", reply_markup=markup_1)
 
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
@@ -91,22 +84,29 @@ def mess_hand(message):
 
 @bot.channel_post_handler(chat_id=[-1002032308872], content_types=['text', 'photo', 'video'])
 def handle_new_channel_post(message):
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT chat_id FROM users")
-            user_ids = [row['chat_id'] for row in cursor.fetchall()]
+
+    connect = sq.connect(db_name)
+    cursor = connect.cursor()
+    cursor.execute("SELECT chat_id FROM users")
+    user_ids = [row[0] for row in cursor.fetchall()]
+
     for user_id in user_ids:
         bot.copy_message(chat_id=user_id, from_chat_id="@signalchanelltest100", message_id=message.message_id)
 
 bot.add_custom_filter(custom_filters.ChatFilter())
 
 
+
 def get_referrals_count(user_id):
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('SELECT referals FROM users WHERE chat_id = %s;', (user_id,))
-            result = cursor.fetchone()
-            return result['referals'] if result else 0
+    connect = sq.connect(db_name)
+    cursor = connect.cursor()
+    cursor.execute('SELECT referals FROM users WHERE chat_id=?;', [user_id])
+
+    result = cursor.fetchone()
+    referrals_count = result[0] if result is not None else 0
+
+    connect.close()
+    return referrals_count
 
 # #
 # # # bu cod botni siklda iwlatiwga javob b
